@@ -1,5 +1,6 @@
 ﻿var http = require('http');
-var server = http.createServer();
+var postData = "e";
+var querystring = require("querystring");
 
 //jsonのソート関数
 var sort_by = function (field, reverse) {
@@ -18,32 +19,51 @@ var sort_by = function (field, reverse) {
 var json = require('./user.json'); //jsonファイルの取得
 json.sort(sort_by('point', true)); //降順ソート
 
-server.on('request', function (req, res) {
-    
+var qs = require('querystring');
+http.createServer(function (request, res) {
 
-    writeHeader(res);
-    res.charset = 'utf-8'
+    if (request.method == 'POST') {
+        var body = '';
+        request.on("data", function (data) {
+            body += data;
 
-    res.write('<h1>参加者得点一覧</h1>');
+            //postData += chunk;
+            //console.log(chunk);
 
-    //参加者の得点リスト 作成
-    res.write('<ol>');
+            //res.write("POST DATA is " + querystring.parse(postData).text);
+        });
+
+        request.on("end", function () {
+            var post = qs.parse(body);
+            console.log(post.id);
+            res.end();
+        });
+
+    } else {
+
+        res.charset = 'utf-8'
+        writeHeader(res); //ヘッダー
+
+        res.write('<h1>参加者得点一覧</h1>');
+
+        //参加者の得点リスト 作成
+        res.write('<ol>');
 
         for (var i = 0; i < json.length; i++) {
             var obj = json[i];
             res.write('<li>' + obj.name + ':' + obj.point + 'pt</li>');
         }
-    res.write('</ol>');
+        res.write('</ol>');
 
-    //特定ユーザの得点表示機能
-    res.write('あなたのポイントは:');
+        //特定ユーザの得点表示機能
+        res.write('あなたのポイントは:');
 
-    
-    writeFooter(res);
-    res.end();
-});
 
-server.listen(8080);
+        writeFooter(res); //フッター
+
+    }
+}).listen(8080);
+
 console.log('Server running on 8080');
 
 
@@ -56,7 +76,15 @@ function writeHeader(res) {
         '<html lang="ja">' +
         '<head>' +
         '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">' +
-        '<link href="./css/main.css" rel="stylesheet" type="text/css">' +
+        
+        //CSS記述
+        '<style type="text/css">' +
+            'h1{' +
+            '    color:red;' +
+            '    background:#4cff00;' +
+            '}' +
+        '</style>' +
+
         '<title>お正月ゲーム大会</title>' +
         '</head>' +
         '<body>';
