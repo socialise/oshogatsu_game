@@ -15,51 +15,56 @@ var sort_by = function (field, reverse) {
 }
 
 //jsonの取得→ソート
-var json = require('./user.json');
-json.sort(sort_by('point', true));
-console.log(json);
+var json = require('./user.json'); //jsonファイルの取得
+json.sort(sort_by('point', true)); //降順ソート
 
 server.on('request', function (req, res) {
-    res.charset = 'utf-8'
-    res.writeHead(200, { 'Content-Type': 'text/html' });
     
-    res.write('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">');
-    res.write('<html lang="ja">');
-    res.write('<head>');
-    res.write('<meta http-equiv="Content-Type" content="text/html; charset=utf-8">');
-    res.write('<title>お正月ゲーム大会</title>');
-    res.write('</head>');
-    res.write('<body>');
 
-    res.write('<h1>Hello Node !</h1>');
+    writeHeader(res);
+    res.charset = 'utf-8'
 
-    //得点表 作成
+    res.write('<h1>参加者得点一覧</h1>');
+
+    //参加者の得点リスト 作成
     res.write('<ol>');
 
-    //while (false) {
-        
         for (var i = 0; i < json.length; i++) {
-            //document.write("<br><br>jsonay index: " + i);
             var obj = json[i];
-            //for (var key in obj) {
-            //    var value = obj[key];
-            //    document.write("<br> - " + key + ": " + value);
-            //}
-            res.write('<li>' + obj.name + ':' + obj.point + '</li>');
+            res.write('<li>' + obj.name + ':' + obj.point + 'pt</li>');
         }
-    //}
     res.write('</ol>');
 
-
-    //特定ユーザの得点表示昨日
+    //特定ユーザの得点表示機能
     res.write('あなたのポイントは:');
 
-    res.write('</body>');
-    res.write('</html>');
-
+    
+    writeFooter(res);
     res.end();
 });
 
-
 server.listen(8080);
 console.log('Server running on 8080');
+
+
+function writeHeader(res) {
+
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+
+    var text = 
+        '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">' +
+        '<html lang="ja">' +
+        '<head>' +
+        '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">' +
+        '<link href="./css/main.css" rel="stylesheet" type="text/css">' +
+        '<title>お正月ゲーム大会</title>' +
+        '</head>' +
+        '<body>';
+    
+    res.write(text);
+}
+
+function writeFooter(res) {
+    res.write('</body>');
+    res.write('</html>');
+}
