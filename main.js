@@ -16,7 +16,7 @@ server.on('request', function (req, res) {
     res.write('<html lang="ja">');
     res.write('<head>');
     res.write('<meta http-equiv="Content-Type" content="text/html; charset=utf-8">');
-    res.write('<title>');res.write('</title>');
+    res.write('<title>お正月ゲーム大会</title>');
     res.write('</head>');
     res.write('<body>');
 
@@ -26,7 +26,8 @@ server.on('request', function (req, res) {
     res.write('<h2>test</h2>');
 
     //得点表
-
+    var json = require('./test.json');
+    console.log(json);
     
     res.write('<ol>');
 
