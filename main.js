@@ -1,6 +1,4 @@
 ﻿var http = require('http');
-var postData = "e";
-var querystring = require("querystring");
 
 //jsonのソート関数
 var sort_by = function (field, reverse) {
@@ -24,18 +22,52 @@ http.createServer(function (request, res) {
 
     if (request.method == 'POST') {
         var body = '';
+
         request.on("data", function (data) {
             body += data;
-
-            //postData += chunk;
-            //console.log(chunk);
-
-            //res.write("POST DATA is " + querystring.parse(postData).text);
         });
-
         request.on("end", function () {
             var post = qs.parse(body);
-            console.log(post.id);
+            console.log(post);
+            var op = post.op;
+            var name = post.name;
+
+            var fs = require('fs');
+
+            switch (op) {
+                case '1': //ユーザ登録
+                    console.log('ユーザ試作');
+                    var obj = {
+                        "name": name,
+                        "point":0
+                    }
+                    json[json.length] = obj;
+                    console.log("ユーザ作成", obj);
+                    fs.writeFile('user.json', JSON.stringify(json, null, '    '));
+                    break;
+                case '2': //得点操作
+                case '3': //ユーザ削除
+
+                    var index = -1;
+                    for (var i = 0; i < json.length; i++) {
+                        var obj = json[i];
+                        if (obj.name == name) index = i;
+                    }
+
+                    if (index == -1) break;
+
+                    if (op == 3) {
+                        //削除処理
+                        break;
+                    } else {
+                        //得点操作
+                        var point = post.point;//加算分
+                    }
+                    
+                    
+                    break;
+            }
+            
             res.end();
         });
 
@@ -51,7 +83,7 @@ http.createServer(function (request, res) {
 
         for (var i = 0; i < json.length; i++) {
             var obj = json[i];
-            res.write('<li>' + obj.name + ':' + obj.point + 'pt</li>');
+            res.write('<li id="' + i + '">' + obj.name + ':' + obj.point + 'pt</li>');
         }
         res.write('</ol>');
 
