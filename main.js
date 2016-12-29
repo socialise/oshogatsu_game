@@ -1,12 +1,23 @@
 ﻿var http = require('http');
 var server = http.createServer();
 
+//jsonのソート関数
+var sort_by = function (field, reverse) {
+    reverse = (reverse) ? -1 : 1;
+    return function (a, b) {
+        a = a[field];
+        b = b[field];
+        
+        if (a < b) return reverse * -1;
+        if (a > b) return reverse * 1;
+        return 0;
+    }
+}
 
-//ファイルの読み込み
-var fs = require('fs');
-var text = fs.readFileSync('user.txt', 'utf-8');
-console.log(text);
-
+//jsonの取得→ソート
+var json = require('./user.json');
+json.sort(sort_by('point', true));
+console.log(json);
 
 server.on('request', function (req, res) {
     res.charset = 'utf-8'
@@ -22,21 +33,21 @@ server.on('request', function (req, res) {
 
     res.write('<h1>Hello Node !</h1>');
 
-    //テンプレ
-    res.write('<h2>test</h2>');
-
-    //得点表
-    var json = require('./test.json');
-    console.log(json);
-    
+    //得点表 作成
     res.write('<ol>');
 
     //while (false) {
-        res.write('<li>a</li>');
-       
+        
+        for (var i = 0; i < json.length; i++) {
+            //document.write("<br><br>jsonay index: " + i);
+            var obj = json[i];
+            //for (var key in obj) {
+            //    var value = obj[key];
+            //    document.write("<br> - " + key + ": " + value);
+            //}
+            res.write('<li>' + obj.name + ':' + obj.point + '</li>');
+        }
     //}
-
-
     res.write('</ol>');
 
 
