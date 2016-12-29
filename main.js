@@ -15,12 +15,34 @@ var sort_by = function (field, reverse) {
 
 //jsonの取得→ソート
 var json = require('./user.json'); //jsonファイルの取得
-json.sort(sort_by('point', true)); //降順ソート
+
 
 var qs = require('querystring');
 http.createServer(function (request, res) {
+    var error_message = null;
+    if (request.method != 'POST') {
+        res.charset = 'utf-8'
+        writeHeader(res); //ヘッダー
 
-    if (request.method == 'POST') {
+        res.write('<h1>参加者得点一覧</h1>');
+
+        //参加者の得点リスト 作成
+        res.write('<ol>');
+
+        json.sort(sort_by('point', true)); //降順ソート
+        for (var i = 0; i < json.length; i++) {
+            var obj = json[i];
+            if (obj != null)
+                res.write('<li id="' + i + '">' + obj.name + ':' + obj.point + 'pt</li>');
+        }
+        res.write('</ol>');
+
+        //特定ユーザの得点表示機能
+        res.write('あなたのポイントは:');
+
+
+        writeFooter(res); //フッター
+    } else {
         var body = '';
 
         request.on("data", function (data) {
@@ -28,22 +50,20 @@ http.createServer(function (request, res) {
         });
         request.on("end", function () {
             var post = qs.parse(body);
-            console.log(post);
             var op = post.op;
             var name = post.name;
-
-            var fs = require('fs');
+            var error = false;
+            console.log("ポストデータ：", post);
 
             switch (op) {
                 case '1': //ユーザ登録
                     console.log('ユーザ試作');
                     var obj = {
                         "name": name,
-                        "point":0
+                        "point": 0
                     }
                     json[json.length] = obj;
                     console.log("ユーザ作成", obj);
-                    fs.writeFile('user.json', JSON.stringify(json, null, '    '));
                     break;
                 case '2': //得点操作
                 case '3': //ユーザ削除
@@ -54,44 +74,35 @@ http.createServer(function (request, res) {
                         if (obj.name == name) index = i;
                     }
 
-                    if (index == -1) break;
-
-                    if (op == 3) {
-                        //削除処理
+                    if (index == -1) {
+                        error = true;
+                        error_message = "該当データはありませんでした。"
                         break;
-                    } else {
-                        //得点操作
-                        var point = post.point;//加算分
                     }
-                    
-                    
-                    break;
+
+                    if (op == '3') {
+                        //削除処理
+                        console.log(name + "さんを削除します");
+                        delete json[index];
+                        break;
+
+                    } else {
+                        //得点加算
+                        var point = Number(post.point);//加算分
+                        json[index].point += point;
+                        break;
+                    }
             }
-            
-            res.end();
+            if (!error) {
+                console.log("json変更");
+                var fs = require('fs');
+                fs.writeFile('user.json', JSON.stringify(json, null, '    '));
+                res.write('successed processing');
+                res.end();
+            } else {
+                console.log(error_message);
+            }
         });
-
-    } else {
-
-        res.charset = 'utf-8'
-        writeHeader(res); //ヘッダー
-
-        res.write('<h1>参加者得点一覧</h1>');
-
-        //参加者の得点リスト 作成
-        res.write('<ol>');
-
-        for (var i = 0; i < json.length; i++) {
-            var obj = json[i];
-            res.write('<li id="' + i + '">' + obj.name + ':' + obj.point + 'pt</li>');
-        }
-        res.write('</ol>');
-
-        //特定ユーザの得点表示機能
-        res.write('あなたのポイントは:');
-
-
-        writeFooter(res); //フッター
 
     }
 }).listen(8080);
