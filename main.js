@@ -1,7 +1,9 @@
 ﻿//変数群
 const NANASHI = 'guest';    //ゲストのクッキー名
-const MAX = 5;              //ランキング表示数
+const MAX = 4;              //ランキング表示数
 var cookie;                 //クッキー
+
+const HOST_URL = 'http://localhost:8080';
 
 //読み込み
 var http = require('http');
@@ -15,31 +17,16 @@ http.createServer(function (request, res) {
     var error_message = null;
 
     if (request.method == 'GET') { 
-        
-        //var q = url.parse(request.url, true);
+
         var query = url.parse(request.url).query;
         var name = qs.parse(query).name
         if (name) {
             res.setHeader('Set-Cookie', ['name=' + encodeURIComponent(name)]);
         }
-        //console.log(query);
-        //console.log(qs.parse(query).name);
         cookie = request.headers.cookie;
-        console.log("cookie", cookie);
+        //console.log("cookie", cookie);
 
-        if (!cookie) {
-            console.log("<<guest enter>>");
-            makingGuestPage(res);
-            res.end();
-        } else if (request.url == '/' || cookie) { 
-            
-            
-                console.log("---メインページを表示しました。---")
-                makingMainPage(res);
-                res.end();                                  //responseを閉じる - main_page
-                //fs.writeFile('user.json', JSON.stringify(json, null, '    ')); //JSONを上書き
-            //}
-        } else if (request.url == '/member') {
+        if (request.url == '/member') {
             res.writeHead(200, { 'Content-Type': 'application/json' });
 
             res.write("{");
@@ -56,6 +43,15 @@ http.createServer(function (request, res) {
             }
             res.write("}");
             res.end();                                  //responseを閉じる - member_list
+        } else if (!cookie) {
+            console.log("<<guest enter>>");
+            makingGuestPage(res);
+            res.end();
+        } else if (request.url == '/' || cookie) {
+
+            console.log("---メインページを表示しました。---")
+            makingMainPage(res);
+            res.end();                                  //responseを閉じる - main_page
         }
         
     } else {
@@ -74,6 +70,7 @@ http.createServer(function (request, res) {
             console.log("POST-DATA", post);
             switch (op) {
                 case '1': //ユーザ登録
+                    res.setHeader('Set-Cookie', ['name=' + encodeURIComponent(name)]); //セッション登録
                     var obj = {
                         "name": name,
                         "point": 0
@@ -109,9 +106,10 @@ http.createServer(function (request, res) {
 
             }
             if (!error) {
-                
                 fs.writeFile('user.json', JSON.stringify(json, null, '    ')); //JSONを上書き
-                res.write('successed processing');
+                res.writeHead(200, { 'Content-Type': 'text/html' });
+                res.write('successed processing<br>');
+                res.write('<p><a href="' + HOST_URL + '">Go to Home</a></p>');
                 res.end();
                 console.log('--- END.');
             } else {
@@ -164,19 +162,25 @@ function makingMainPage(res) {
 
     //参加者の得点リスト 作成
     res.write('<ol>');
-    var name = decodeURIComponent(cookie.substring(5))
+    var name = decodeURIComponent(cookie.substring(5)) //ﾃﾞｺｰﾄﾞ
+
     console.log('表示テスト', name);
 
-    json.sort(sort_by('point', true)); //降順ソート
+    json.sort(sort_by('point', true)); //降順ｿｰﾄ
+    var myPoint = 0;
     for (var i = 0; i < MAX && i < json.length; i++) { //変数の値まで表示
         var obj = json[i];
-        if (obj != null)
+        if (obj != null) {
             res.write('<li id="' + i + '">' + obj.name + ':' + obj.point + 'pt</li>');
+            if (obj.name == name)
+                myPoint = Number(obj.point);
+
+        }
     }
     res.write('</ol>');
 
     //特定ユーザの得点表示機能
-    res.write('あなたのポイントは:');
+    res.write(name + 'さんのポイントは:' + myPoint);
 
     res.write('</body>');
     res.write('</html>');
@@ -186,23 +190,32 @@ function makingGuestPage(res) {
     res.writeHead(200, { 'Content-Type': 'text/html' });
     res.write(header);
     res.charset = 'utf-8'
-    res.write('<form action="http://localhost:8080" method="GET">');
+
+    res.write('<div style="font-size:75%">');
+
+    res.write('既に登録している人は自分の名前を選んで隣のボタンを押してください');
+    res.write('<form action="' + HOST_URL + '" method="GET">');
     res.write('<select name="name">');
 
     for (var i = 0; i < json.length; i++) {
         var obj = json[i];
         if (obj != null)
             res.write('<option value="' + obj.name + '">' + obj.name + '</option>');
-
-        //res.write('<li id="' + i + '">' + obj.name + ':' + obj.point + 'pt</li>');
     }
-
-    //'<option value="' + name + '">' + name + '</option>'
-
+    
     res.write('</select>');
     res.write('<input type="submit" value="送信">');
+    res.write('</form><br>');
+
+    res.write('登録をしていない人は下のテキストボックスに名前を入力して、登録ボタンを押してください');
+    res.write('<form action="' + HOST_URL + '" method="POST">');
+    res.write('<input type="hidden" name="op" value="1">');
+    res.write('<input type="text" name="name">');
+    res.write('<input type="submit" value="登録">');
     res.write('</form>');
-    res.write('ボタンを押したら、更新ボタン(F5)を押してください。')
+    res.write('<br>ボタンを押したら、更新ボタン(F5)を押してください。')
+
+    res.write('</div>');
     res.write('</body>');
     res.write('</html>');
     
