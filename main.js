@@ -20,10 +20,15 @@ http.createServer(function (request, res) {
 
         var query = url.parse(request.url).query;
         var name = qs.parse(query).name
+
         if (name) {
             res.setHeader('Set-Cookie', ['name=' + encodeURIComponent(name)]);
         }
-        cookie = request.headers.cookie;
+        if (qs.parse(query).clear) {
+            cookie = null;
+        } else {
+            cookie = request.headers.cookie;
+        }
         //console.log("cookie", cookie);
 
         if (request.url == '/member') {
@@ -49,7 +54,7 @@ http.createServer(function (request, res) {
             res.end();
         } else if (request.url == '/' || cookie) {
 
-            console.log("---メインページを表示しました。---")
+            //console.log("---メインページを表示しました。---")
             makingMainPage(res);
             res.end();                                  //responseを閉じる - main_page
         }
@@ -81,6 +86,31 @@ http.createServer(function (request, res) {
                 case '2': //得点操作
 
                     var index = -1;
+                    if (op == '2' && post.json) { //複数命令を連続処理
+                        var arr = JSON.parse(post.json);
+                        
+                        for (var i = 0; i < arr.length; i++) {
+                            
+                            name = arr[i].name;
+                            var point = Number(arr[i].point); //加算分
+
+                            for (var j = 0; j < json.length; j++) {
+                                var obj = json[j];
+                                
+                                if (obj && obj.name == name) {
+                                    index = j;
+                                }
+                            }
+                            if (index == -1) {
+                                break;
+                            }
+                            json[index].point += point;
+                            console.log(name + "さんのポイントを" + point + "加算しました。");
+                        }
+                        break;
+                    } 
+
+                    //得点操作 1命令ずつ
                     for (var i = 0; i < json.length; i++) {
                         var obj = json[i];
                         if (obj != null && obj.name == name) index = i;
@@ -118,7 +148,7 @@ http.createServer(function (request, res) {
         });
     }
 }).listen(8080);
-console.log('Server running on 8080');
+console.log('Server running on ' + HOST_URL);
 
 //jsonのソート関数
 var sort_by = function (field, reverse) {
@@ -164,7 +194,7 @@ function makingMainPage(res) {
     res.write('<ol>');
     var name = decodeURIComponent(cookie.substring(5)) //ﾃﾞｺｰﾄﾞ
 
-    console.log('表示テスト', name);
+    console.log(name + 'さんがメインページを見ています');
 
     json.sort(sort_by('point', true)); //降順ｿｰﾄ
     var myPoint = 0;
@@ -181,7 +211,10 @@ function makingMainPage(res) {
 
     //特定ユーザの得点表示機能
     res.write(name + 'さんのポイントは:' + myPoint);
-
+    res.write('<form action="' + HOST_URL + '">');
+    res.write('<input type="hidden" name="clear" value="true">');
+    res.write('<input type="submit" value="セッション解除">');
+    res.write('</form>');
     res.write('</body>');
     res.write('</html>');
 }
@@ -214,7 +247,7 @@ function makingGuestPage(res) {
     res.write('<input type="submit" value="登録">');
     res.write('</form>');
     res.write('<br>ボタンを押したら、更新ボタン(F5)を押してください。')
-
+    res.write('更新ボタンを押してもだめな場合は<a href="' + HOST_URL + '">こちら</a>');
     res.write('</div>');
     res.write('</body>');
     res.write('</html>');
