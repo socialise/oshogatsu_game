@@ -1,4 +1,6 @@
 ﻿var http = require('http');
+var json = require('./user.json'); //jsonファイルの取得
+var qs = require('querystring');
 
 //jsonのソート関数
 var sort_by = function (field, reverse) {
@@ -13,11 +15,6 @@ var sort_by = function (field, reverse) {
     }
 }
 
-//jsonの取得→ソート
-var json = require('./user.json'); //jsonファイルの取得
-
-
-var qs = require('querystring');
 http.createServer(function (request, res) {
     var error_message = null;
     if (request.method != 'POST') {
@@ -57,7 +54,6 @@ http.createServer(function (request, res) {
 
             switch (op) {
                 case '1': //ユーザ登録
-                    console.log('ユーザ試作');
                     var obj = {
                         "name": name,
                         "point": 0
@@ -71,7 +67,7 @@ http.createServer(function (request, res) {
                     var index = -1;
                     for (var i = 0; i < json.length; i++) {
                         var obj = json[i];
-                        if (obj.name == name) index = i;
+                        if (obj != null || obj.name == name) index = i;
                     }
 
                     if (index == -1) {
