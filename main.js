@@ -1,4 +1,9 @@
-﻿var http = require('http');
+﻿//変数群
+const NANASHI = 'guest';    //ゲストのクッキー名
+const MAX = 5;              //ランキング表示数
+
+//読み込み
+var http = require('http');
 var json = require('./user.json'); //jsonファイルの取得
 var qs = require('querystring');
 var url = require('url');
@@ -6,12 +11,32 @@ var url = require('url');
 http.createServer(function (request, res) {
     var error_message = null;
 
-    if (request.method == 'GET') {
+    if (request.method == 'GET') { 
 
-        if (request.url == '/') {
-            console.log("メインページを表示しました。")
-            makingMainPage(res);
+        if (request.url == '/') { 
+            var cookie = request.headers.cookie;
+            if (!cookie) {
+                //登録画面に移行する
+                console.log('<<guest enter>>');
 
+                var fs = require('fs');
+                fs.readFile('./register_form.html', 'utf-8', function (err, data) {
+                    if (err) {
+                        res.writeHead(404, { 'Content-Type': 'text/plain' });
+                        res.write('not found!');
+                        return res.end();
+                    }
+                    res.writeHead(200, { 'Content-Type': 'text/html' });
+                    res.write(data);
+                    res.end();                          //responseを閉じる - guest_page
+                });
+                
+            } else {
+                console.log("---メインページを表示しました。---")
+                makingMainPage(res);
+                res.end();                              //responseを閉じる - main_page
+            }
+            
         } else if (request.url == '/member') {
             res.writeHead(200, { 'Content-Type': 'application/json' });
 
@@ -28,7 +53,9 @@ http.createServer(function (request, res) {
                 if (i < json.length - 1) res.write(',');
             }
             res.write("}");
+            res.end();                                  //responseを閉じる - member_list
         }
+        
     } else {
         var body = '';
 
@@ -41,7 +68,7 @@ http.createServer(function (request, res) {
             var name = post.name;
             var error = false;
             
-            console.log("---命令コード：" + op);
+            console.log("--- 令コード：" + op);
             console.log("POST-DATA", post);
             switch (op) {
                 case '1': //ユーザ登録
@@ -64,9 +91,7 @@ http.createServer(function (request, res) {
                         error_message = "該当データはありませんでした。"
                         break;
                     }
-
                     if (op == '2') {
-
                         var point = Number(post.point); //加算分
                         json[index].point += point;
                         console.log(name + "さんのポイントを" + point + "加算しました。");
@@ -83,17 +108,16 @@ http.createServer(function (request, res) {
             }
             if (!error) {
                 var fs = require('fs');
-                fs.writeFile('user.json', JSON.stringify(json, null, '    '));
+                fs.writeFile('user.json', JSON.stringify(json, null, '    ')); //JSONを上書き
                 res.write('successed processing');
                 res.end();
+                console.log('--- END.');
             } else {
                 console.log(error_message);
             }
         });
-
     }
 }).listen(8080);
-
 console.log('Server running on 8080');
 
 //jsonのソート関数
@@ -140,7 +164,7 @@ function makingMainPage(res) {
     res.write('<ol>');
 
     json.sort(sort_by('point', true)); //降順ソート
-    for (var i = 0; i < json.length; i++) {
+    for (var i = 0; i < MAX && i < json.length; i++) { //変数の値まで表示
         var obj = json[i];
         if (obj != null)
             res.write('<li id="' + i + '">' + obj.name + ':' + obj.point + 'pt</li>');
