@@ -3,19 +3,6 @@ var json = require('./user.json'); //jsonファイルの取得
 var qs = require('querystring');
 var url = require('url');
 
-//jsonのソート関数
-var sort_by = function (field, reverse) {
-    reverse = (reverse) ? -1 : 1;
-    return function (a, b) {
-        a = a[field];
-        b = b[field];
-        
-        if (a < b) return reverse * -1;
-        if (a > b) return reverse * 1;
-        return 0;
-    }
-}
-
 http.createServer(function (request, res) {
     var error_message = null;
 
@@ -90,8 +77,6 @@ http.createServer(function (request, res) {
                     json = json.filter(function (v) {
                         return v.name != name
                     });
-
-                    //delete json[index];
                     break;
 
             }
@@ -109,6 +94,19 @@ http.createServer(function (request, res) {
 }).listen(8080);
 
 console.log('Server running on 8080');
+
+//jsonのソート関数
+var sort_by = function (field, reverse) {
+    reverse = (reverse) ? -1 : 1;
+    return function (a, b) {
+        a = a[field];
+        b = b[field];
+
+        if (a < b) return reverse * -1;
+        if (a > b) return reverse * 1;
+        return 0;
+    }
+}
 
 function makingMainPage(res) {
     res.writeHead(200, { 'Content-Type': 'text/html' });
