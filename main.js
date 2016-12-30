@@ -9,7 +9,7 @@ http.createServer(function (request, res) {
     if (request.method == 'GET') {
 
         if (request.url == '/') {
-            console.log("write")
+            console.log("メインページを表示しました。")
             makingMainPage(res);
 
         } else if (request.url == '/member') {
@@ -22,7 +22,6 @@ http.createServer(function (request, res) {
                 if (obj != null) {
                     res.write(obj.name);
                 } else {
-                    //res.write('null');
                     continue;
                 }
                 //末尾でなければカンマをつける
@@ -41,8 +40,9 @@ http.createServer(function (request, res) {
             var op = post.op;
             var name = post.name;
             var error = false;
-            console.log("POST-DATA", post);
+            
             console.log("---命令コード：" + op);
+            console.log("POST-DATA", post);
             switch (op) {
                 case '1': //ユーザ登録
                     var obj = {
@@ -66,9 +66,10 @@ http.createServer(function (request, res) {
                     }
 
                     if (op == '2') {
-                        console.log(name + "さんのポイントを" + point + "加算します。")
+
                         var point = Number(post.point); //加算分
                         json[index].point += point;
+                        console.log(name + "さんのポイントを" + point + "加算しました。");
                         break;
                     }
                 case '3': //ユーザ削除処理
