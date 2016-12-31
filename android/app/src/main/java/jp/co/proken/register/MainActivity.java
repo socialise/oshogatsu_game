@@ -19,6 +19,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -35,7 +36,7 @@ public class MainActivity extends AppCompatActivity
 
 	private ArrayList<String> member;
 	private boolean ready = false;
-	private String HOST_URL = "URL";
+	private String HOST_URL = "localhost";
 
 	@Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,7 +101,7 @@ public class MainActivity extends AppCompatActivity
 				.setView(picker)
 				.setPositiveButton("OK", this)
 				.create();
-
+		 //大富豪
 		Button changeButton = (Button) findViewById(R.id.changeNumber); // 人数の変更をするとき
 		assert changeButton != null;
 		changeButton.setOnClickListener(new View.OnClickListener() {
@@ -187,15 +188,58 @@ public class MainActivity extends AppCompatActivity
 	public void onClick(View v) {
 		//util.getSelected()
 
-		ArrayList<Player> players = new ArrayList<>();
+		final ArrayList<Player> players = new ArrayList<>();
 
-		for (int i = 0; i < util.getSize(); i++){
+		for (int i = 0; i < util.getSize(); i++) {
 			Player player = util.getSelected(i);
 
-			if(player != null /*&& "選択なし".equals(player.name)*/){
+			if (player != null && !Util.defaultStr.equals(player.name)) {
 				players.add(player);
 				Log.v("player 確認", player.name + "さんは" + player.point + "点獲得");
 			}
 		}
+
+
+
+		Runnable run = new Runnable() {
+			@Override
+			public void run() {
+
+				try {
+					StringBuilder sb = new StringBuilder();
+					HttpURLConnection con = (HttpURLConnection) new URL(HOST_URL).openConnection();
+					con.setRequestMethod("POST");
+					con.setDoInput(true);
+					con.setDoOutput(true); // ←☆POSTによるデータ送信を可能にします
+
+					sb.append("[");
+
+					for (Player p : players) {
+						//players.get(0).toJSON();
+						sb.append(p.toJSON() + ",");
+					}
+
+					String data = sb.toString();
+					data = data.substring(0, data.length() - 1) + "]";
+					PrintStream ps = new PrintStream(con.getOutputStream());
+					ps.print("op=2&json=" + data);
+					ps.close();
+
+					BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream()));
+					StringBuilder stringBuilder = new StringBuilder();
+					String line;
+					while ((line = br.readLine()) != null) {
+						stringBuilder.append(line);
+					}
+					br.close();
+					Log.v(TAG, stringBuilder.toString());
+					//accessListener.success(InputStreamToString(con.getInputStream()));
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		};
+
+		new Thread(run).start();
 	}
 }

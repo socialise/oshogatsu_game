@@ -15,7 +15,7 @@ import java.util.List;
 
 public class Util implements Controller {
 
-	private final String defaultStr = "選択なし";
+	public static final String defaultStr = "選択なし";
 	private ViewGroup root;
 	private ArrayList<Spinner>  spinners= new ArrayList<>();
 
@@ -117,8 +117,13 @@ public class Util implements Controller {
 
 		for(int i = 0; i < resIds.length; i++){
 			RadioButton radioButton = new RadioButton(context);
+
 			radioButton.setText(resIds[i]);
 			radioGroup.addView(radioButton);
+			if(resIds[i] == R.string.heimin){
+				radioGroup.check(radioButton.getId());
+
+			}
 		}
 
 		final int WRAP_CONTENT = ViewGroup.LayoutParams.WRAP_CONTENT;
@@ -130,7 +135,7 @@ public class Util implements Controller {
 //		spinner.setAdapter(adapter);
 		vg.addView(spinner); //スピナー追加
 		vg.addView(radioGroup); //ラジオボタンを追加
-		
+
 		return vg;
 	}
 
