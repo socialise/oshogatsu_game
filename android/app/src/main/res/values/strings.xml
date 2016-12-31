@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">Register</string>
+    <string name="action_settings">Settings</string>
+    <string name="daihugo">大富豪</string>
+    <string name="hugo">富豪</string>
+    <string name="heimin">平民</string>
+    <string name="hinmin">貧民</string>
+    <string name="daihinmin">大貧民</string>
+
+    <string-array name="list">
+        <item>A型</item>
+        <item>B型</item>
+        <item>O型</item>
+        <item>AB型</item>
+    </string-array>
+
+    <string-array name="member">
+        <item>選択なし</item>
+    </string-array>
+</resources>
